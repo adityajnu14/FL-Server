@@ -36,27 +36,27 @@ def encode_file(file_name):
 
 #declare channels here
 #channel<n> is the channel for node 'n'
-channel01 = grpc.insecure_channel('10.5.0.187:8081')
-channel02 = grpc.insecure_channel('10.5.1.1:8081')
-channel03 = grpc.insecure_channel('10.5.0.205:8081')
-channel04 = grpc.insecure_channel('10.5.0.221:8081')
-channel05 = grpc.insecure_channel('10.5.1.9:8081')
+channel01 = grpc.insecure_channel('10.5.0.221:8081')
+# channel02 = grpc.insecure_channel('10.5.1.1:8081')
+# channel03 = grpc.insecure_channel('10.5.0.205:8081')
+# channel04 = grpc.insecure_channel('10.5.0.221:8081')
+# channel05 = grpc.insecure_channel('10.5.1.9:8081')
 
 #declare stubs here
 #stub<n> is the stub for channel<n>
 stub01 = functions_pb2_grpc.FederatedAppStub(channel01)
-stub02 = functions_pb2_grpc.FederatedAppStub(channel02)
-stub03 = functions_pb2_grpc.FederatedAppStub(channel03)
-stub04 = functions_pb2_grpc.FederatedAppStub(channel04)
-stub05 = functions_pb2_grpc.FederatedAppStub(channel05)
+# stub02 = functions_pb2_grpc.FederatedAppStub(channel02)
+# stub03 = functions_pb2_grpc.FederatedAppStub(channel03)
+# stub04 = functions_pb2_grpc.FederatedAppStub(channel04)
+# stub05 = functions_pb2_grpc.FederatedAppStub(channel05)
 
 # array of all our stubs
 stubs = [
     stub01,
-    stub02,
-    stub03,
-    stub04,
-    stub05
+    # stub02,
+    # stub03,
+    # stub04,
+    # stub05
 ]
 
 #number of nodes on the network
@@ -67,7 +67,7 @@ n = len(stubs)
 def genFunc(i):
     empty = functions_pb2.Empty(value = 1)
     res = stubs[i].GenerateData(empty)
-    print("node0",i+1,":",res.value)
+    print("client ",i+1,":",res.value)
 
 def sendFunc(i, opt):
     if (opt == 2):
@@ -76,14 +76,14 @@ def sendFunc(i, opt):
         filename = "optimised_model.h5"
     ModelString = functions_pb2.Model(model=encode_file(filename))
     res = stubs[i].SendModel(ModelString)
-    print("node0",i+1,":",res.value, " - file :", filename)
+    print("client ",i+1,":",res.value, " - file :", filename)
 
 def trainFunc(i):
     empty = functions_pb2.Empty(value = 1)
     res = stubs[i].Train(empty)
     with open("Models/model_"+str(i+1)+".h5","wb") as file:
         file.write(base64.b64decode(res.model))
-    print("Saved model from node0",i)
+    print("Saved model from client ",i)
 
 
 def getGloablDataset():
@@ -178,7 +178,7 @@ def createData():
 
         df = pd.DataFrame(data)
         df.reset_index()
-        df.to_csv(path + 'data/node0' + str(folderId) + '/data.csv')
+        df.to_csv(path + 'data/client ' + str(folderId) + '/data.csv')
     print("Dataset is created for %d devices" %(n))
   
 
@@ -236,19 +236,37 @@ def optimiseModels():
 
    
 #Create and initilize model for first time. 
-def createInitialModel():
+def createInitialModelForANN():
     K.clear_session()
 
     model = tf.keras.Sequential()
-    model.add(tf.keras.layers.Dense(64, activation='relu', input_shape=(512,)))
+    model.add(tf.keras.layers.Dense(32, activation='relu', input_shape=(512,)))
     #model.add(tf.keras.layers.Dense(64, activation='relu'))
     #model.add(tf.keras.layers.Dense(32, activation='relu'))
+    model.add(tf.keras.layers.Dense(16))
+
     model.add(tf.keras.layers.Dense(8, activation='sigmoid'))
 
 
     model.compile(optimizer='adam', loss=tf.keras.losses.CategoricalCrossentropy(), metrics=['accuracy'])
 
     model.save('Models/InitModel.h5')
+
+def createInitialModelForCNN():
+    K.clear_session()
+
+    model = tf.keras.Sequential()
+    model.add(tf.keras.layers.Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=(512,)))
+    model.add(tf.keras.layers.Dropout(0.5))
+    model.add(tf.keras.layers.MaxPooling1D(pool_size=2))
+    model.add(tf.keras.layers.Flatten())
+    model.add(Dense(16, activation='relu'))
+    model.add(tf.keras.layers.Dense(8, activation='sigmoid'))
+    model.compile(optimizer='adam', loss=tf.keras.losses.CategoricalCrossentropy(), metrics=['accuracy'])
+
+    model.save('Models/InitModel.h5')
+
+
 
 def visualizeTraining():
 
@@ -319,7 +337,8 @@ if __name__ == '__main__':
             initializeServerVariable()
             #createData()
         if (option == "2"):
-            createInitialModel()
+            # createInitialModelForANN()
+            createInitialModelForCNN
             initializeServerVariable()
             saveLearntMetrices('Models/InitModel.h5')
             
