@@ -1,3 +1,4 @@
+import numbers
 import os
 import grpc
 import base64
@@ -15,7 +16,7 @@ import time
 # import faulthandler
 # faulthandler.enable()
 
-path = "/home/aditya/Desktop/Codes/FL_framework/"
+path = "/home/aditya/Desktop/Codes/FL-Server/"
 
 import warnings  
 with warnings.catch_warnings():
@@ -61,8 +62,9 @@ stubs = [
 
 #number of nodes on the network
 n = len(stubs)
-
-"""Util functions"""
+print("-"*40)
+print('Total numbers of participating clients are {} '.format(n) )
+print('-'*40)
 
 def genFunc(i):
     empty = functions_pb2.Empty(value = 1)
@@ -86,32 +88,16 @@ def trainFunc(i):
     print("Saved model from client ",i)
 
 
-def getGloablDataset():
-
-    print("Inside get global")
-    return 0
-
-    data = pd.read_csv('/home/aditya/Desktop/Codes/FL/FL_framework/data/node01/data.csv')
-    X = data.iloc[:,1:-1].values
-    y = data.iloc[:,-1].values
-
-    for i in range(1, n):
-        data = pd.read_csv('/home/aditya/Desktop/Codes/FL/FL_framework/data/node0' + str(i + 1) + '/data.csv')
-        X = np.append(X, data.iloc[:,1:-1].values, axis = 0 )
-        y = np.append(y, data.iloc[:,-1].values, axis = 0)
-
-    return X, y
-
 def getTestDataset():
 
-    database = sio.loadmat(path + 'IEEE for federated learning/data_base_all_sequences_random.mat')
+    database = sio.loadmat(path + 'Dataset/data_base_all_sequences_random.mat')
     
     X = database['Data_test_2']
     y = database['label_test_2']
 
     return X, y
 
-def initializeServerVariable():
+def initializeServerMetrics():
 
     #Reseting globaal metrics file
     trainMetrics = {'accuracy' : [], 'loss' : []}
@@ -140,7 +126,7 @@ def createData():
 
     #Data preprocessing
 
-    database = sio.loadmat(path + 'IEEE for federated learning/data_base_all_sequences_random.mat')
+    database = sio.loadmat(path + 'Dataset/data_base_all_sequences_random.mat')
     x_train = database['Data_train_2']
     y_train = database['label_train_2']
     #y_train_t = to_categorical(y_train)
@@ -178,7 +164,10 @@ def createData():
 
         df = pd.DataFrame(data)
         df.reset_index()
-        df.to_csv(path + 'data/client ' + str(folderId) + '/data.csv')
+        outdir = path + 'Client data/client' + str(folderId)
+        if not os.path.exists(outdir):
+            os.mkdir(outdir)
+        df.to_csv(outdir + '/data.csv')
     print("Dataset is created for %d devices" %(n))
   
 
@@ -226,13 +215,6 @@ def optimiseModels():
     new_model.save("Models/optimised_model.h5")
     print("Averaged over all models - optimised model saved!")
     saveLearntMetrices("Models/optimised_model.h5")
-    # X_test, y_test = getTestDataset()
-    # y_test = to_categorical(y_test)
-    # score = new_model.evaluate(X_test, y_test, verbose=0)
-    # print("Agreegated model with all data loss : {} and accuracy : {}".format(score[0], score[1]))
-
-    # g_loss.append(score[0])
-    # g_acc.append(score[1])
 
    
 #Create and initilize model for first time. 
@@ -321,10 +303,10 @@ if __name__ == '__main__':
 # User options for training main()
     while True:
 
-        print("1. Generate Data")
-        print("2. Initialize model on all nodes")
-        print("3. Perform training on all nodes")
-        print("4. Average and optimize new model")
+        print("1. Initlize variables and creae data ")
+        print("2. send initial model on participating clients")
+        print("3. Start training on all clients")
+        print("4. Aggregates all models")
         print("5. Send new model to all nodes")
         print("6. Visualize model accuracy/loss")
         print("7. Batch training on whole data")
@@ -333,23 +315,13 @@ if __name__ == '__main__':
         option = input()
 
         if (option == "1"):
+            initializeServerMetrics()
             generateData() #data and index initilization at client level
-            initializeServerVariable()
-            #createData()
+            # createData()
         if (option == "2"):
             # createInitialModelForANN()
             createInitialModelForCNN
-            initializeServerVariable()
             saveLearntMetrices('Models/InitModel.h5')
-            
-            # model = load_model('Models/InitModel.h5')
-            # X_test, y_test = getTestDataset()
-            # y_test = to_categorical(y_test)
-            # score = model.evaluate(X_test, y_test, verbose=0)
-            # print("Agreegated model on test data loss : {} and accuracy : {}".format(score[0], score[1]))
-            # # g_loss.append(score[0])
-            # g_acc.append(score[1])
-
             sendModel(int(option))
         if (option == "3"):
             train()
