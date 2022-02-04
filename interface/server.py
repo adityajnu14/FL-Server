@@ -24,7 +24,7 @@ with warnings.catch_warnings():
     import tensorflow as tf  
     from tensorflow.keras.models import load_model
     from tensorflow.keras.models import Sequential
-    from tensorflow.keras.layers import Activation, Dense
+    from tensorflow.keras.layers import Activation, Dense, Conv1D, Dropout, MaxPooling1D, Flatten
     from tensorflow.keras import backend as K
     from tensorflow.keras.utils import to_categorical
 
@@ -38,26 +38,26 @@ def encode_file(file_name):
 #declare channels here
 #channel<n> is the channel for node 'n'
 channel01 = grpc.insecure_channel('10.5.0.221:8081')
-# channel02 = grpc.insecure_channel('10.5.1.1:8081')
-# channel03 = grpc.insecure_channel('10.5.0.205:8081')
-# channel04 = grpc.insecure_channel('10.5.0.221:8081')
-# channel05 = grpc.insecure_channel('10.5.1.9:8081')
+channel02 = grpc.insecure_channel('10.5.1.1:8081')
+channel03 = grpc.insecure_channel('10.5.0.205:8081')
+channel04 = grpc.insecure_channel('10.5.0.221:8081')
+channel05 = grpc.insecure_channel('10.5.1.9:8081')
 
 #declare stubs here
 #stub<n> is the stub for channel<n>
 stub01 = functions_pb2_grpc.FederatedAppStub(channel01)
-# stub02 = functions_pb2_grpc.FederatedAppStub(channel02)
-# stub03 = functions_pb2_grpc.FederatedAppStub(channel03)
-# stub04 = functions_pb2_grpc.FederatedAppStub(channel04)
-# stub05 = functions_pb2_grpc.FederatedAppStub(channel05)
+stub02 = functions_pb2_grpc.FederatedAppStub(channel02)
+stub03 = functions_pb2_grpc.FederatedAppStub(channel03)
+stub04 = functions_pb2_grpc.FederatedAppStub(channel04)
+stub05 = functions_pb2_grpc.FederatedAppStub(channel05)
 
 # array of all our stubs
 stubs = [
     stub01,
-    # stub02,
-    # stub03,
-    # stub04,
-    # stub05
+    stub02,
+    stub03,
+    stub04,
+    stub05
 ]
 
 #number of nodes on the network
@@ -221,15 +221,10 @@ def optimiseModels():
 def createInitialModelForANN():
     K.clear_session()
 
-    model = tf.keras.Sequential()
-    model.add(tf.keras.layers.Dense(32, activation='relu', input_shape=(512,)))
-    #model.add(tf.keras.layers.Dense(64, activation='relu'))
-    #model.add(tf.keras.layers.Dense(32, activation='relu'))
-    model.add(tf.keras.layers.Dense(16))
-
-    model.add(tf.keras.layers.Dense(8, activation='sigmoid'))
-
-
+    model = Sequential()
+    model.add(Dense(32, activation='relu', input_shape=(512,)))
+    model.add(Dense(16))
+    model.add(Dense(8, activation='sigmoid'))
     model.compile(optimizer='adam', loss=tf.keras.losses.CategoricalCrossentropy(), metrics=['accuracy'])
 
     model.save('Models/InitModel.h5')
@@ -237,13 +232,13 @@ def createInitialModelForANN():
 def createInitialModelForCNN():
     K.clear_session()
 
-    model = tf.keras.Sequential()
-    model.add(tf.keras.layers.Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=(512,)))
-    model.add(tf.keras.layers.Dropout(0.5))
-    model.add(tf.keras.layers.MaxPooling1D(pool_size=2))
-    model.add(tf.keras.layers.Flatten())
+    model = Sequential()
+    model.add(Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=(512,)))
+    model.add(Dropout(0.5))
+    model.add(MaxPooling1D(pool_size=2))
+    model.add(Flatten())
     model.add(Dense(16, activation='relu'))
-    model.add(tf.keras.layers.Dense(8, activation='sigmoid'))
+    model.add(Dense(8, activation='sigmoid'))
     model.compile(optimizer='adam', loss=tf.keras.losses.CategoricalCrossentropy(), metrics=['accuracy'])
 
     model.save('Models/InitModel.h5')
