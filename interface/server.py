@@ -35,33 +35,47 @@ def encode_file(file_name):
         encoded_string = base64.b64encode(file.read())
     return encoded_string
 
-#declare channels here
+
+
+# #declare channels here
 #channel<n> is the channel for node 'n'
-channel01 = grpc.insecure_channel('10.5.0.221:8081')
-channel02 = grpc.insecure_channel('10.5.1.1:8081')
-channel03 = grpc.insecure_channel('10.5.0.205:8081')
-channel04 = grpc.insecure_channel('10.5.0.221:8081')
-channel05 = grpc.insecure_channel('10.5.1.9:8081')
+# channel01 = grpc.insecure_channel('19.168.0.123:8081')
+# channel02 = grpc.insecure_channel('198.168.0.123:8081')
+# channel03 = grpc.insecure_channel('198.168.0.111:8081')
+# channel04 = grpc.insecure_channel('198.168.0.160:8081')
+# channel05 = grpc.insecure_channel('198.168.0.112:8081')
 
 #declare stubs here
 #stub<n> is the stub for channel<n>
-stub01 = functions_pb2_grpc.FederatedAppStub(channel01)
-stub02 = functions_pb2_grpc.FederatedAppStub(channel02)
-stub03 = functions_pb2_grpc.FederatedAppStub(channel03)
-stub04 = functions_pb2_grpc.FederatedAppStub(channel04)
-stub05 = functions_pb2_grpc.FederatedAppStub(channel05)
+# stub01 = functions_pb2_grpc.FederatedAppStub(channel01)
+# stub02 = functions_pb2_grpc.FederatedAppStub(channel02)
+# stub03 = functions_pb2_grpc.FederatedAppStub(channel03)
+# stub04 = functions_pb2_grpc.FederatedAppStub(channel04)
+# stub05 = functions_pb2_grpc.FederatedAppStub(channel05)
 
 # array of all our stubs
-stubs = [
-    stub01,
-    stub02,
-    stub03,
-    stub04,
-    stub05
-]
+# stubs = [
+#     stub01,
+    # stub02,
+    # stub03,
+    # stub04,
+    # stub05
+    # ]
 
-#number of nodes on the network
-n = len(stubs)
+clients_address = [ \
+        '192.168.0.123:8081', \
+        '192.168.0.112:8081',\
+        '192.168.0.160:8081',\
+        '192.168.0.144:8081', \
+        '192.168.0.119:8081'\
+         ]
+n = len(clients_address)
+stubs = []
+for _ in range(n):
+    stubs.append(functions_pb2_grpc.FederatedAppStub(\
+        grpc.insecure_channel(clients_address[_])))
+
+
 print("-"*40)
 print('Total numbers of participating clients are {} '.format(n) )
 print('-'*40)
