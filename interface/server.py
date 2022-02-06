@@ -16,7 +16,7 @@ import time
 # import faulthandler
 # faulthandler.enable()
 
-path = "/home/aditya/Desktop/Codes/FL-Server/"
+path = "/home/aditya/Desktop/FL-Server/"
 
 import warnings  
 with warnings.catch_warnings():

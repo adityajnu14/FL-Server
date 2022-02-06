@@ -4,7 +4,7 @@ A simple application that uses docker and gRPC to demonstrate fedrated learning
 
 Few commands to fetech training and accumulates the data
 
-Delete the previous folder, ** Double-check file name **
+Delete the previous folder, **Double-check file name**
 
 ```
 # rm -r ~/Desktop/Training/ANN/Client1/data
