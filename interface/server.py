@@ -35,33 +35,6 @@ def encode_file(file_name):
         encoded_string = base64.b64encode(file.read())
     return encoded_string
 
-
-
-# #declare channels here
-#channel<n> is the channel for node 'n'
-# channel01 = grpc.insecure_channel('19.168.0.123:8081')
-# channel02 = grpc.insecure_channel('198.168.0.123:8081')
-# channel03 = grpc.insecure_channel('198.168.0.111:8081')
-# channel04 = grpc.insecure_channel('198.168.0.160:8081')
-# channel05 = grpc.insecure_channel('198.168.0.112:8081')
-
-#declare stubs here
-#stub<n> is the stub for channel<n>
-# stub01 = functions_pb2_grpc.FederatedAppStub(channel01)
-# stub02 = functions_pb2_grpc.FederatedAppStub(channel02)
-# stub03 = functions_pb2_grpc.FederatedAppStub(channel03)
-# stub04 = functions_pb2_grpc.FederatedAppStub(channel04)
-# stub05 = functions_pb2_grpc.FederatedAppStub(channel05)
-
-# array of all our stubs
-# stubs = [
-#     stub01,
-    # stub02,
-    # stub03,
-    # stub04,
-    # stub05
-    # ]
-
 clients_address = [ \
         '192.168.0.123:8081', \
         '192.168.0.112:8081',\
@@ -238,6 +211,7 @@ def createInitialModelForANN():
     model = Sequential()
     model.add(Dense(32, activation='relu', input_shape=(512,)))
     model.add(Dense(16))
+    # model.add(Dropout(0.2))
     model.add(Dense(8, activation='sigmoid'))
     model.compile(optimizer='adam', loss=tf.keras.losses.CategoricalCrossentropy(), metrics=['accuracy'])
 
@@ -247,11 +221,12 @@ def createInitialModelForCNN():
     K.clear_session()
 
     model = Sequential()
-    model.add(Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=(512,)))
-    model.add(Dropout(0.5))
+    model.add(Conv1D(filters=32, kernel_size=3, activation='relu', input_shape=(512,)))
+    # model.add(Dropout(0.25))
     model.add(MaxPooling1D(pool_size=2))
+    model.add(Dense(filters=16, activation='relu'))
+
     model.add(Flatten())
-    model.add(Dense(16, activation='relu'))
     model.add(Dense(8, activation='sigmoid'))
     model.compile(optimizer='adam', loss=tf.keras.losses.CategoricalCrossentropy(), metrics=['accuracy'])
 
@@ -270,6 +245,7 @@ def visualizeTraining():
     plt.ylabel('Accuracy')
     plt.xlabel('Rounds')
     plt.legend()
+    plt.savefig('Models/g_acc.png')
     f.show()
     
     g = plt.figure(2)
@@ -278,12 +254,13 @@ def visualizeTraining():
     plt.ylabel('Loss')
     plt.xlabel('Rounds')
     plt.legend()
+    plt.savefig('Models/g_loss.png')
     g.show()
 
 
     h = plt.figure(3)
     for i in range(1, n+1):
-        with open( path + 'remotedata/Node ' + str(i) + '/localMetrics.txt', 'r') as f:
+        with open( '/home/aditya/Desktop/Training/CNN/Client' + str(i) + '/data/localMetrics.txt', 'r') as f:
             trainMetrics = json.load(f)
             plt.plot(trainMetrics['accuracy'], label='Device ' + str(i) )
     plt.plot(gloablMetrics['accuracy'], '--b', label='Server')
@@ -291,11 +268,12 @@ def visualizeTraining():
     plt.ylabel('Accuracy')
     plt.xlabel('Rounds')
     plt.legend()
+    plt.savefig('Models/A_acc.png')
     h.show()
 
     s = plt.figure(4)
     for i in range(1, n+1):
-        with open(path + 'remotedata/Node ' + str(i) + '/localMetrics.txt', 'r') as f:
+        with open('/home/aditya/Desktop/Training/CNN/Client' + str(i) + '/data/localMetrics.txt', 'r') as f:
             trainMetrics = json.load(f)
             plt.plot(trainMetrics['loss'], label='Device ' + str(i) )
     plt.plot(gloablMetrics['loss'], '--b', label='Server')
@@ -303,12 +281,13 @@ def visualizeTraining():
     plt.ylabel('Loss')
     plt.xlabel('Rounds')
     plt.legend()
+    plt.savefig('Models/A_loss.png')
     s.show()
 
 
 if __name__ == '__main__':
     # mp.set_start_method('fork')
-
+    round = 1
 # User options for training main()
     while True:
 
@@ -341,12 +320,13 @@ if __name__ == '__main__':
         if (option == "6"):
             visualizeTraining()
         if (option == "7"):
-            for i in range(53):
-                print("Current Round ", i+1)
+            for _ in range(10):
+                print("Current Round ", round)
                 train()
-                time.sleep(3)
+                # time.sleep(3)
                 optimiseModels()
                 sendModel(5)
+                round = round +1
         if (option == "8"):
             break
         
