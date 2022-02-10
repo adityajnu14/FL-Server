@@ -24,7 +24,7 @@ with warnings.catch_warnings():
     import tensorflow as tf  
     from tensorflow.keras.models import load_model
     from tensorflow.keras.models import Sequential
-    from tensorflow.keras.layers import Activation, Dense, Conv1D, Dropout, MaxPooling1D, Flatten
+    from tensorflow.keras.layers import Activation, Dense, Conv1D, Dropout, Reshape, MaxPooling1D, Flatten
     from tensorflow.keras import backend as K
     from tensorflow.keras.utils import to_categorical
 
@@ -39,7 +39,7 @@ clients_address = [ \
         '192.168.0.123:8081', \
         '192.168.0.112:8081',\
         '192.168.0.160:8081',\
-        '192.168.0.144:8081', \
+        # '192.168.0.144:8081', \
         '192.168.0.119:8081'\
          ]
 n = len(clients_address)
@@ -216,21 +216,23 @@ def createInitialModelForANN():
     model.compile(optimizer='adam', loss=tf.keras.losses.CategoricalCrossentropy(), metrics=['accuracy'])
 
     model.save('Models/InitModel.h5')
+    model.summary()
 
 def createInitialModelForCNN():
     K.clear_session()
 
     model = Sequential()
-    model.add(Conv1D(filters=32, kernel_size=3, activation='relu', input_shape=(512,)))
-    # model.add(Dropout(0.25))
+    model.add(Reshape((512,1), input_shape=(512,1)))
+    model.add(Conv1D(filters=16, kernel_size=3, activation='relu', padding='same', input_shape=(512,1)))
     model.add(MaxPooling1D(pool_size=2))
-    model.add(Dense(filters=16, activation='relu'))
-
     model.add(Flatten())
+
+    model.add(Dense(32, activation='relu'))
     model.add(Dense(8, activation='sigmoid'))
     model.compile(optimizer='adam', loss=tf.keras.losses.CategoricalCrossentropy(), metrics=['accuracy'])
 
     model.save('Models/InitModel.h5')
+    model.summary()
 
 
 
@@ -308,7 +310,7 @@ if __name__ == '__main__':
             # createData()
         if (option == "2"):
             # createInitialModelForANN()
-            createInitialModelForCNN
+            createInitialModelForCNN()
             saveLearntMetrices('Models/InitModel.h5')
             sendModel(int(option))
         if (option == "3"):
