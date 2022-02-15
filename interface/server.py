@@ -16,7 +16,7 @@ import time
 # import faulthandler
 # faulthandler.enable()
 
-path = "/home/aditya/Desktop/FL-Server/"
+path = "/home/aditya/Downloads/FL-Server/"
 
 import warnings  
 with warnings.catch_warnings():
@@ -36,11 +36,11 @@ def encode_file(file_name):
     return encoded_string
 
 clients_address = [ \
-        '192.168.0.123:8081', \
-        '192.168.0.112:8081',\
-        '192.168.0.160:8081',\
-        # '192.168.0.144:8081', \
-        '192.168.0.119:8081'\
+        '10.5.0.236:8081', \
+        '10.5.0.237:8081',\
+        '10.5.0.238:8081',\
+        '10.5.0.239:8081', \
+        '10.5.0.233:8081'\
          ]
 n = len(clients_address)
 stubs = []
@@ -210,8 +210,8 @@ def createInitialModelForANN():
 
     model = Sequential()
     model.add(Dense(32, activation='relu', input_shape=(512,)))
+    # model.add(Dropout(0.25))
     model.add(Dense(16))
-    # model.add(Dropout(0.2))
     model.add(Dense(8, activation='sigmoid'))
     model.compile(optimizer='adam', loss=tf.keras.losses.CategoricalCrossentropy(), metrics=['accuracy'])
 
@@ -223,11 +223,12 @@ def createInitialModelForCNN():
 
     model = Sequential()
     model.add(Reshape((512,1), input_shape=(512,1)))
-    model.add(Conv1D(filters=16, kernel_size=3, activation='relu', padding='same', input_shape=(512,1)))
+    model.add(Conv1D(filters=16, kernel_size=3,padding='same', activation='relu', input_shape=(512,1)))
     model.add(MaxPooling1D(pool_size=2))
-    model.add(Flatten())
+    # model.add(Flatten())
 
-    model.add(Dense(32, activation='relu'))
+    model.add(Conv1D(filters=4, kernel_size=3, padding='same',  activation='relu'))
+    model.add(Flatten())
     model.add(Dense(8, activation='sigmoid'))
     model.compile(optimizer='adam', loss=tf.keras.losses.CategoricalCrossentropy(), metrics=['accuracy'])
 
@@ -237,6 +238,7 @@ def createInitialModelForCNN():
 
 
 def visualizeTraining():
+    
 
     fp =  open('Models/globalMetrics.txt','r')
     gloablMetrics = json.load(fp)
@@ -322,7 +324,7 @@ if __name__ == '__main__':
         if (option == "6"):
             visualizeTraining()
         if (option == "7"):
-            for _ in range(10):
+            for _ in range(54):
                 print("Current Round ", round)
                 train()
                 # time.sleep(3)
